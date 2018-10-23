@@ -67,23 +67,6 @@ function [rSL, indVI, dirVI] = RetinalSlip( t, u, params )
         assert(1);
     end
     
-    % Case when we are passed the visual noise at this time
-    % directly
-    VSc_VInoise = u.VInoise;
-    if ( size(VSc_VInoise,1) == 3 )
-        assert( size(VSc_VInoise,2) == 1 );
-        curr_VInoise = VSc_VInoise;
-    % Case when we are passed a time series of visual noise and
-    % must extract the current angular acceleration through interpolation
-    elseif ( size(VSc_VInoise,1) == 4 )
-        tVInoise = VSc_VInoise(1,:);
-        VInoise = VSc_VInoise(2:4,:);
-        curr_VInoise = interp1( tVInoise, VInoise', t )';
-    % Something else, through an assertion
-    else
-        assert(1);
-    end
-    
     % Case when we are passed the Tcan at this time
     % directly
     VSc_Tcan = u.Tcan;
@@ -102,7 +85,7 @@ function [rSL, indVI, dirVI] = RetinalSlip( t, u, params )
     end
     
     % Model
-    rSL = Tcan*curr_omega - curr_VS + curr_VInoise;
+    rSL = AddNoise( t, Tcan*curr_omega - curr_VS, u.VInoise );
     dirVI = rSL*go;
     indVI = rSL*ko;
 end

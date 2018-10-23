@@ -55,7 +55,7 @@ Fs = 1/dt;
 
 
 % Motion Profile
-mopo = 3;
+mopo = 1;
 if mopo == 1
     
     %%% Angular inputs from EBR paper - varies depending on plot being made
@@ -178,13 +178,12 @@ sigVS = [0.2]*pi/180;            % Vestibular storage noise (Laurens and Angelak
 sigVI = [0.1]*pi/180;            % Vision noise (Laurens and Angelaki seemed high, 1/10 of listed value)
 
 Cnoise = randn(3,length(t)) * sigC / dt;
-VSnoise = randn(3,length(t)) * sigVS / dt;
-VInoise = randn(3,length(t)) * sigVI / dt;
-dVSnoise = [zeros(3,1), diff(VSnoise,[],2)];
+VSnoise = randn(3,length(t)) * sigVS;
+VInoise = randn(3,length(t)) * sigVI;
 
-u.Cnoise = [0;0;0]; %[t; Cnoise];
-u.dVSnoise = [0;0;0]; %[t; dVSnoise];
-u.VInoise = [0;0;0]; %[t; VInoise];
+u.Cnoise = [t; Cnoise];
+u.VSnoise = [t; VSnoise];
+u.VInoise = [t; VInoise];
 
 %% Initializing the variables
 % Initializing initial conditions
@@ -195,12 +194,16 @@ VS = zeros(3,1);             % Velocity storage leaky integrator
 VSf = zeros(3,1);            % Velocity storage full
 GE = u.grav;             % Gravity estimate
 
-init_x = [C; D; INT; VS; VSf; GE];
+init_x = [C; D; INT; VS];
+init_store = [];
+%init_x = [C; D; INT; VS; VSf; GE];
 %init_x = [C; D; D; INT; VS; VSf; GE];
 
 %% Simulating the model
 options = odeset('MaxStep', 0.1);
-[tinteg, full_states] = ode45(@(t,y) LaurensVestibularModelDeriv(t,y,u,params), [min(t), max(t)], init_x, options);
+[tinteg, full_states, store_states] = ExplicitIntegrator( @(t,y,s) SimpleLaurensVestibularModelDerivExplicit(t,y,s,u,params), t, init_x, init_store);
+%[tinteg, full_states] = ode45(@(t,y) SimpleLaurensVestibularModelDeriv(t,y,u,params), t, init_x, options);
+%[tinteg, full_states] = ode45(@(t,y) LaurensVestibularModelDeriv(t,y,u,params), [min(t), max(t)], init_x, options);
 %[tinteg, full_states] = ode45(@(t,y) CanalDynamicsDeriv(t,y,u,params), [min(t), max(t)], C);%init_x);
 %[tinteg, full_states] = ode45(@(t,y) LaurensVestibularModelDeriv(t,y,u,params), [min(t), max(t)], [C;D;INT;VS;VSf]);%init_x);
 
@@ -215,6 +218,6 @@ for i=1:length(tinteg)
     % Get the fused canal signal
     u.D = full_states(i,4:6)';
     u.dirVI = [0;0;0];
-    u.VSf = full_states(i,13:15)';
+    u.VSf = full_states(i,10:12)';
     VE(:,i) = VelocityEstimate( tinteg(i), u, params );
 end

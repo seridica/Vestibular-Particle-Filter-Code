@@ -12,15 +12,9 @@
 %    - tc = the time constant for the canal
 % Additional inputs (u):
 %    - alpha = angular acceleration input
-%    - noiseC = canal noise (this needs to be an input to avoid issues with
-%    ode integration of random variables)
 %    - Tcan = rotation matrix from lab frame to canal alignment
 % Model:
-%    - dC = -C/Tc + alpha + noise (optional)
-%
-% Note, to get rid of noise, simply set sigC param to sigC = zeros(3,3) or
-% sigC = 0 (use matrix covariance if you want different canals to have
-% different noise characteristics and cross-coupled errors).
+%    - dC = -C/Tc + alpha
 
 function dx = CanalDynamicsDeriv( t, x, u, params )
     % Make sure we have three states (the three canal states)
@@ -50,25 +44,6 @@ function dx = CanalDynamicsDeriv( t, x, u, params )
         assert(1);
     end
     
-    % Case when we are passed the noise at this time
-    % directly
-    vec_noise = u.Cnoise;
-    if ( size(vec_noise,1) == 3 )
-        assert( size(vec_noise,2) == 1 );
-        Cnoise = vec_noise;
-    % Case when we are passed a time series of angular acceleration and
-    % must extract the current angular acceleration through interpolation
-    elseif ( size(vec_noise,1) == 4 )
-        tnoise = vec_noise(1,:);
-        all_noise = vec_noise(2:4,:);
-        
-        % Interp or floor
-        Cnoise = interp1( tnoise, all_noise', t )';
-    % Something else, through an assertion
-    else
-        assert(1);
-    end
-    
     % Case when we are passed the Tcan at this time
     % directly
     vec_Tcan = u.Tcan;
@@ -87,5 +62,5 @@ function dx = CanalDynamicsDeriv( t, x, u, params )
     end
     
     % Model
-    dx = -x/tc + Tcan*curr_alpha + Cnoise;
+    dx = -x/tc + Tcan*curr_alpha;
 end

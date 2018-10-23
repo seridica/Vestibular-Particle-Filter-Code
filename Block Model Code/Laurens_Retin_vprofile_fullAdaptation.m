@@ -39,7 +39,7 @@ if mopo == 1
     Ts = 1/0.65;
     d = 1;                           % Somatogravic feedback gain (not an actual parameter - used as on/off switch)
 
-    sigC = [0.0]; %[0.1]*pi/180;             % Canal noise (Laurens and Angelaki)
+    sigC = [0.1]*pi/180;             % Canal noise (Laurens and Angelaki)
     sigVS = [0.0]; %[0.2]*pi/180;            % Vestibular storage noise (Laurens and Angelaki seemed to high, halfed it)
     sigVI = [0.0]; %[0.1]*pi/180;            % Vision noise (Laurens and Angelaki seemed high, 1/10 of listed value)
     
@@ -129,7 +129,7 @@ elseif mopo == 3
     Ts = 1/0.65;
     d = 1;                           % Somatogravic feedback gain (not an actual parameter - used as on/off switch)
 
-    sigC = [0.0]; %[0.1]*pi/180;             % Canal noise (Laurens and Angelaki)
+    sigC = [0.1]*pi/180;             % Canal noise (Laurens and Angelaki)
     sigVS = [0.0]; %[0.2]*pi/180;            % Vestibular storage noise (Laurens and Angelaki seemed to high, halfed it)
     sigVI = [0.0]; %[0.1]*pi/180;            % Vision noise (Laurens and Angelaki seemed high, 1/10 of listed value)
     
@@ -346,6 +346,7 @@ for rr = 1                       % Loop for running several iterations if desire
 end
 
 %% Plotting figure 1 from Laurens and Angelaki
+keyboard;
 if mopo == 1 || mopo == 3
     C_full = mean(C_full,3);
     VEi_full = mean(VEi_full,3);

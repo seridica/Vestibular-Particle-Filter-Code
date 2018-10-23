@@ -1,5 +1,5 @@
 %%%
-% File: SimpleLaurensVestibularModelDeriv.m
+% File: SimpleLaurensVestibularModelDerivExplicit.m
 % Author: Calvin Kuo
 % Date: 10-23-2018
 % Notes: This code is a restructuring of the Laurens_NatureNeuroscience_M.m
@@ -32,7 +32,7 @@
 %   - Velocity Estimate
 %       : gd = Gain on canal afferent
 
-function dx = SimpleLaurensVestibularModelDeriv( t, x, u, params )
+function [dx, new_store] = SimpleLaurensVestibularModelDerivExplicit( t, x, store, u, params )
     
     %% STATES
     C = x(1:3);
@@ -43,10 +43,11 @@ function dx = SimpleLaurensVestibularModelDeriv( t, x, u, params )
     %% CANAL PROCESSING STEPS
     % Canal dynamics
     dC = CanalDynamicsDeriv( t, C, u, params );
+    dC = AddNoise( t, dC, u.Cnoise );
     
     % Canal afferents long-term adaptation (set dD = dC if you want to
     % skip this)
-    u.dC = AddNoise( t, dC, u.Cnoise ); % Add noise to the canal post integration
+    u.dC = dC; % Add noise to the canal post integration
     dD = CanalAdaptationDeriv( t, D, u, params );
     
     % Endolymph motion
@@ -66,4 +67,5 @@ function dx = SimpleLaurensVestibularModelDeriv( t, x, u, params )
     
     %% Derivative
     dx = [dC; dD; dINT; dVS];
+    new_store = [];
 end

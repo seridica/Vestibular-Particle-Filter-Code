@@ -20,14 +20,9 @@
 %    - Tcan = rotation matrix from lab frame to canal alignment
 %    - D = Canal afferent signal (either from canal dynamics of from slow
 %    adaptation). This is passed straight to EndolymphDynamicsdVSriv
-%    - dVSnoise = Noise on the velosity storage
 %    - dINT = change in endolymph position
 % Model:
 %    - dVS = -VS/Tvs + dINT + indVI + kf*Tcan*( GIA/norm(GIA) x GE/norm(GE) )
-%
-% Note, to get rid of noise, simply set sigC param to sigC = zeros(3,3) or
-% sigC = 0 (use matrix covariance if you want different canals to have
-% different noise characteristics and cross-coupled errors).
 
 function dx = VelocityStorage( t, x, u, params )
     % Make sure we have three states (the three canal states)
