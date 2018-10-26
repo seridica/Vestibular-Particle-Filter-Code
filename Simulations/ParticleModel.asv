@@ -1,7 +1,7 @@
 %%%
-% File: LaurensModel.m
+% File: ParticleModel.m
 % Author: Calvin Kuo
-% Date: 10-10-2018
+% Date: 10-23-2018
 % Notes: This code is a restructuring of the Laurens_NatureNeuroscience_M.m
 % code originally written by PAF, CJD, NK, and JSB
 
@@ -22,8 +22,8 @@
 %       : gd = Gain on canal afferent
 
 params.tc = 7.3; %4;
-params.tn = 25; %75;
-params.kv = 0.247; %0.52; %0.247;
+params.tn = 30; %75;
+params.kv = 0.52; %0.247;
 params.tvs = 7.7; %14;
 
 % Switches
@@ -31,9 +31,9 @@ params.vswitch = 0;
 params.gswitch = 0;
 
 % For dual line
-params.tn1 = 10000; %75.9; %75;
+params.tn1 = 10000; %25; %75.9; %75;
 params.tn2 = 10000;
-params.sigprior = ones(1,3)*0.5;
+params.sigprior = ones(1,3)*0.5; %0.005;
 
 params.kf = 0.38; % Set to zero to turn off gravity
 params.ts = 1/0.65;
@@ -59,11 +59,11 @@ Fs = 1/dt;
 
 
 % Motion Profile
-mopo = 1;
+mopo = 2;
 if mopo == 1
 
     % Angular inputs from EBR paper - varies depending on plot being made
-    angVMag = [0; 90*pi/180; 0];     % Velocity magnitude in rads (roll, pitch yaw)
+    angVMag = [0; 90; 0];%*pi/180; 0];     % Velocity magnitude in rads (roll, pitch yaw)
     Tmo = 220;                        % Duration of total motion profile
     t = 0:dt:Tmo;
     angPro = zeros(1,Tmo*Fs);
@@ -82,7 +82,7 @@ if mopo == 1
     
     % Angular position
     angPos = cumtrapz(t,angVel,2);
-    angPos(2,:) = angPos(2,:)-90*pi/180;
+    angPos(2,:) = angPos(2,:)-90; %*pi/180;
 
     % Translation motion profiles - acceleration
     tranAMag = [0; 0; 0];
@@ -99,13 +99,13 @@ elseif mopo == 2
     % this.
     
     % Angular inputs from EBR paper - varies depending on plot being made
-    angVMag = [0; 90*pi/180; 0];     % Velocity magnitude in rads (roll, pitch yaw)
+    angVMag = [0; 90; 0]; %*pi/180; 0];     % Velocity magnitude in rads (roll, pitch yaw)
     Tmo = 220;                        % Duration of total motion profile
     t = 0:dt:Tmo;
     angPro = zeros(1,Tmo*Fs);
-    angPro(t>1&t<=2) = linspace(0,1,length(angPro(t>1&t<=2)));
-    angPro(t>2&t<100)= 1;
-    angPro(t>=100&t<101) = linspace(1,0,length(angPro(t>=100&t<101)));
+    angPro(t>1&t<=5) = linspace(0,1,length(angPro(t>1&t<=5)));
+    angPro(t>5&t<100)= 1;
+    angPro(t>=100&t<105) = linspace(1,0,length(angPro(t>=100&t<105)));
     angVel = angVMag * angPro;
     t = (0:length(angVel)-1)*dt;
     
@@ -118,7 +118,7 @@ elseif mopo == 2
     
     % Angular position
     angPos = cumtrapz(t,angVel,2);
-    angPos(2,:) = angPos(2,:)-90*pi/180;
+    angPos(2,:) = angPos(2,:)-90; %*pi/180;
 
     % Translation motion profiles - acceleration
     tranAMag = [0; 0; 0];
@@ -140,16 +140,20 @@ u.Tcan = [1 0 0;...
           0 0 1];
 
 % Nois Histories
-sigC = [0.1]*pi/180;             % Canal noise (Laurens and Angelaki)
+sigC = [2.8)];%[0.1]*pi/180 / dt;             % Canal noise (Laurens and Angelaki)
+sigQ = [41.0];
+
 sigVS = [0.2]*pi/180;            % Vestibular storage noise (Laurens and Angelaki seemed to high, halfed it)
 sigVI = [0.1]*pi/180;            % Vision noise (Laurens and Angelaki seemed high, 1/10 of listed value)
 
-Cnoise = randn(3,length(t)) * sigC / dt;
+C1noise = randn(3,length(t)) * sigC; % / dt;
+C2noise = randn(3,length(t)) * sigC; % / dt;
 VSnoise = randn(3,length(t)) * sigVS / dt;
 VInoise = randn(3,length(t)) * sigVI / dt;
 dVSnoise = [zeros(3,1), diff(VSnoise,[],2)];
 
-u.Cnoise = [t; Cnoise];
+u.Qnoise = eye(3)*sigQ;
+u.Cnoise = eye(3)*sigC; %[t; C1noise];
 u.dVSnoise = [t; dVSnoise];
 u.VInoise = [t; VInoise];
 
@@ -163,30 +167,10 @@ VSf = zeros(3,1);            % Velocity storage full
 GE = u.grav;             % Gravity estimate
 
 %init_x = [C; D; INT; VS; VSf; GE];
-init_x = [C; D; D; INT; VS; VSf; GE];
+nChannels = 10;
+init_x = zeros(nChannels*3*4, 1);%[randn(nChannels*2*3,1)*sigVI];
+init_store = [0;0;0;sigQ;sigQ;sigQ;0;0;0;randn(nChannels*4*3,1)*sigQ];
 
 %% Simulating the model
 options = odeset('MaxStep', 0.1);
-%[tinteg, full_states] = ode45(@(t,y) LaurensVestibularModelDeriv(t,y,u,params), [min(t), max(t)], init_x, options);
-%[tinteg, full_states] = ode45(@(t,y) CanalDynamicsDeriv(t,y,u,params), [min(t), max(t)], C);%init_x);
-%[tinteg, full_states] = ode45(@(t,y) LaurensVestibularModelDeriv(t,y,u,params), [min(t), max(t)], [C;D;INT;VS;VSf]);%init_x);
-
-[tinteg, full_states] = ode45(@(t,y) SpineLabDualAdaptationDeriv(t,y,u,params), [min(t), max(t)], init_x, options);
-
-% Get velocity estimate
-nSteps = length( tinteg );
-VE = zeros( 3, nSteps );
-D = zeros( 3, nSteps );
-AW = zeros( 2, nSteps );
-for i=1:length(tinteg)
-    
-    % Get the fused canal signal
-    Dinput = [full_states(i,4:6); full_states(i,7:9)]';
-    [D(:,i), S(:,i), AW(:,i)] = CanalParticleWeighting( Dinput, [0,0,0], params.sigprior );
-    
-    u.D = D(:,i); %full_states(i,4:6)'; %
-    u.dirVI = [0;0;0];
-    u.VSf = full_states(i,16:18)';
-    %u.VSf = full_states(i,13:15)';
-    VE(:,i) = VelocityEstimate( tinteg(i), u, params );
-end
+[tinteg, full_states, full_store] = ExplicitIntegrator(@(t,y,s) VelocityStorageFilterDerivExplicit(t,y,s,u,params), t, init_x, init_store);

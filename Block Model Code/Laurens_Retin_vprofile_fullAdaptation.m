@@ -22,7 +22,7 @@ grav = [0; 0; -9.81];
 % [B,A] = butter(3,(10/Fs/2),'low');
   
 %% Motion profiles
-mopo = 1;   % Evaluate motion responses recreating responses in Laurens and Angelaki paper
+mopo = 3;   % Evaluate motion responses recreating responses in Laurens and Angelaki paper
 if mopo == 1
     % Parameters for Laurens and Angelaki EBR paper
     kv = 0.247;                      % Cupula gain (Laurens and Angelaki) - NOTE: this value was provided by Laurens by email in which he said 0.2 was incorrect

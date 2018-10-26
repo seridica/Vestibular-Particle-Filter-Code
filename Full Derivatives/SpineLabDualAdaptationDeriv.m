@@ -78,7 +78,7 @@ function dx = SpineLabDualAdaptationDeriv( t, x, u, params )
     dD2 = CanalAdaptationDeriv( t, D2, u, params );
     
     % Fuse adaptation lines
-    [D, AW] = CanalParticleWeighting( [D1,D2], params.sigprior );
+    [D, Sig, AW] = CanalParticleWeighting( [D1,D2], [0,0,0], params.sigprior );
     %D = mean( [D1, D2], 2 );
     
     % Endolymph motion
