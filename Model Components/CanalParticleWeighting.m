@@ -23,7 +23,7 @@ function [fused_estimate, fused_sigma, afferent_weights] = CanalParticleWeightin
         end
         % Renormalize each time to prevent weights going to zero
         if sum( afferent_weights ) < 1e-10
-            afferent_weights = ones( nAfferents, 1 ) / nAfferents;
+            afferent_weights = ones( nAfferents, 1 ) / nAfferents
         else
             afferent_weights = afferent_weights / sum( afferent_weights );
         end

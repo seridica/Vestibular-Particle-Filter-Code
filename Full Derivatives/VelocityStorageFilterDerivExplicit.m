@@ -1,7 +1,7 @@
 %%%
-% File: KarmaliDerivExplicit.m
+% File: VelocityStorageFilterDerivExplicit.m
 % Author: Calvin Kuo
-% Date: 10-23-2018
+% Date: 10-26-2018
 %
 % This code is similar to the Karmali et. al. filter
 %
@@ -46,18 +46,14 @@
 %   - Velocity Estimate
 %       : gd = Gain on canal afferent
 
-function [dx, new_store] = KarmaliDerivExplicit( t, x, store, u, params )
+function [dx, new_store] = VelocityStorageFilterDerivExplicit( t, x, store, u, params )
     
     %% STATES
-    nChannels = length( x ) / 3 / 4;
+    nChannels = length( x ) / 3 / 8;
     dx = zeros( size(x) );
     
-    %% STORAGE
-    prev_omega = store(1:3);
-    prev_sigma = store(4:6);
-    
     %% CANAL PROCESSING STEPS
-    part_sens = zeros( nChannels*2, 3 );
+    part_sens = zeros( nChannels*2, 3 ); % Particles for the canals
     
     %% EXTERNAL INPUTS
     for i=1:nChannels
@@ -93,38 +89,50 @@ function [dx, new_store] = KarmaliDerivExplicit( t, x, store, u, params )
     end
     
     %% INTERNAL MODEL
-    prev_corr_particles = reshape( store(10:(9+nChannels*2*3)), nChannels*2, 3 );
-    prev_particles = reshape( store((10+nChannels*2*3):(9+nChannels*4*3)), nChannels*2, 3 );
-    prev_D = reshape( store((10+nChannels*4*3):(9+nChannels*6*3)), nChannels*2, 3 );
-
-    Kgain = eye(3)*3; 
-    %Kgain = diag( std( prev_particles ) ).^2 * inv( u.Qnoise.^2 )*10;
+    prev_corr_particles = reshape( store(7:(6+nChannels*2*3)), nChannels*2, 3 );
+    sens_sigma = diag( std( part_sens ) ).^2;
+    prev_sigma = diag( std( prev_corr_particles ) ).^2 + u.Qnoise.^2;
+    dt = 0.1;
+    
     corrected_particles = zeros( size( prev_corr_particles ) );
     for i=1:nChannels
-        corrected_particles((i-1)*2+1,:) = ( ... %randn(1,3)*u.Qnoise + ...
-            prev_corr_particles((i-1)*2+1,:) + part_sens((i-1)*2+1,:) - ...
-            prev_D((i-1)*2+1,:)*(1-0.1/params.tn1) + ...
-            0.1/params.tc*prev_particles((i-1)*2+1,:) ) * Kgain * inv( Kgain + eye(3) );
+        ooff = nChannels*3*4+(i-1)*12;
+        C1_internal = x(ooff+1:ooff+3);
+        D1_internal = x(ooff+4:ooff+6);
+        corrected_particles((i-1)*2+1,:) =  inv(prev_sigma) * ( sens_sigma*((1-dt/params.tn1)*D1_internal - dt/params.tc*C1_internal - prev_corr_particles((i-1)*2+1,:)' + u.Qnoise*randn(3,1)) + prev_sigma*(part_sens((i-1)*2+1,:)') );
         
-        corrected_particles(i*2,:) = ( ... %randn(1,3)*u.Qnoise + ...
-            prev_corr_particles(i*2,:) + part_sens(i*2,:) - ...
-            prev_D(i*2,:)*(1-0.1/params.tn1) + ...
-            0.1/params.tc*prev_particles(i*2,:) ) * Kgain * inv( Kgain + eye(3) );
+        C2_internal = x(ooff+7:ooff+9);
+        D2_internal = x(ooff+10:ooff+12);
+        corrected_particles(i*2,:) = inv(prev_sigma) * ( sens_sigma*((1-dt/params.tn1)*D2_internal - dt/params.tc*C2_internal - prev_corr_particles(i*2,:)' + u.Qnoise*randn(3,1) ) + prev_sigma*(part_sens(i*2,:)') );
     end
-
-    % Propagate internal model
-    new_input = corrected_particles - prev_corr_particles;
-    part_in = new_input + prev_particles*(1-0.1/params.tc);
-    part_D = zeros( size( prev_D ) );
+    
+    %[omega_est, sigma_est, ww] = CanalParticleWeighting( corrected_particles', [0,0,0], params.sigprior );
+    omega_est = mean( corrected_particles )';
+    sigma_est = std( corrected_particles )';
+    
     for i=1:nChannels
-        part_D((i-1)*2+1,:) = new_input((i-1)*2+1,:) + (1-0.1/params.tn1)*prev_D((i-1)*2+1,:) - 0.1/params.tc*part_in((i-1)*2+1,:);
-        part_D(i*2,:) = new_input(i*2,:) + (1-0.1/params.tn2)*prev_D(i*2,:) - 0.1/params.tc*part_in(i*2,:);
+        C1_internal = x(ooff+1:ooff+3);
+        intmod.alpha = ( corrected_particles((i-1)*2+1,:) - prev_corr_particles((i-1)*2+1,:) )' / dt;
+        intmod.Tcan = eye(3);
+        dC1 = CanalDynamicsDeriv( t, C1_internal, intmod, params );
+        
+        intmod.dC = AddNoise( t, dC1, u.Qnoise );
+        D1_internal = x(ooff+4:ooff+6);
+        params.tn = params.tn1;
+        dD1 = CanalAdaptationDeriv( t, D1_internal, intmod, params );
+        
+        C2_internal = x(ooff+7:ooff+9);
+        intmod.alpha = ( corrected_particles(i*2,:) - prev_corr_particles(i*2,:) )' / dt;
+        dC2 = CanalDynamicsDeriv( t, C2_internal, intmod, params );
+        
+        intmod.dC = AddNoise( t, dC2, u.Qnoise );
+        D2_internal = x(ooff+10:ooff+12);
+        params.tn = params.tn2;
+        dD2 = CanalAdaptationDeriv( t, D2_internal, intmod, params );
+        
+        dx(nChannels*2*3+(i-1)*12+1:nChannels*2*3+i*12) = [dC1; dD1; dC2; dD2];
     end
-
-    [omega_est, sigma_est, ww] = CanalParticleWeighting( corrected_particles', [0,0,0], params.sigprior );
-    %omega_est = mean( corrected_particles )';
-    %sigma_est = std( corrected_particles )';
     
     %% Derivative
-    new_store = [omega_est; sigma_est; diag(Kgain); reshape( corrected_particles, nChannels*2*3, 1 ); reshape( part_in, nChannels*2*3, 1 ); reshape( part_D, nChannels*2*3,1 )];
+    new_store = [omega_est; sigma_est; reshape( corrected_particles, nChannels*2*3, 1 )];
 end

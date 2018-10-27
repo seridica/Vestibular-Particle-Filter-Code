@@ -22,7 +22,7 @@
 %       : gd = Gain on canal afferent
 
 params.tc = 7.3; %4;
-params.tn = 30; %75;
+params.tn_internal = 75;
 params.kv = 0.52; %0.247;
 params.tvs = 7.7; %14;
 
@@ -33,7 +33,7 @@ params.gswitch = 0;
 % For dual line
 params.tn1 = 25; %25; %75.9; %75;
 params.tn2 = 10000;
-params.sigprior = ones(1,3)*0.005; %0.005;
+params.sigprior = ones(1,3)*12^2; %0.005;
 
 params.kf = 0.38; % Set to zero to turn off gravity
 params.ts = 1/0.65;
@@ -59,7 +59,7 @@ Fs = 1/dt;
 
 
 % Motion Profile
-mopo = 2;
+mopo = 1;
 if mopo == 1
 
     % Angular inputs from EBR paper - varies depending on plot being made
@@ -140,7 +140,7 @@ u.Tcan = [1 0 0;...
           0 0 1];
 
 % Nois Histories
-sigC = [0.2]; %[1.7]; %[3.6];%[0.1]*pi/180 / dt;             % Canal noise (Laurens and Angelaki)
+sigC = [0.1]; %[1.7]; %[3.6];%[0.1]*pi/180 / dt;             % Canal noise (Laurens and Angelaki)
 sigQ = [0.1];%[6.4]; %[14.0];
 
 sigVS = [0.2]*pi/180;            % Vestibular storage noise (Laurens and Angelaki seemed to high, halfed it)
@@ -167,10 +167,15 @@ VSf = zeros(3,1);            % Velocity storage full
 GE = u.grav;             % Gravity estimate
 
 %init_x = [C; D; INT; VS; VSf; GE];
+%% Simulating with Karmali Derivative
 nChannels = 10;
 init_x = zeros(nChannels*3*4, 1);%[randn(nChannels*2*3,1)*sigVI];
-init_store = [0;0;0;sigQ;sigQ;sigQ;0;0;0;randn(nChannels*4*3,1)*sigQ];
-
-%% Simulating the model
+init_store = [0;0;0;sigQ;sigQ;sigQ;0;0;0;randn(nChannels*6*3,1)*sigC];
 options = odeset('MaxStep', 0.1);
 [tinteg, full_states, full_store] = ExplicitIntegrator(@(t,y,s) KarmaliDerivExplicit(t,y,s,u,params), t, init_x, init_store);
+
+%% Simulating with my velocity storage model
+% nChannels = 10;
+% init_x = zeros( nChannels*3*8, 1 );
+% init_store = [0;0;0;sigQ;sigQ;sigQ;randn(nChannels*2*3,1)];
+% [integ, full_states, full_store] = ExplicitIntegrator(@(t,y,s) VelocityStorageFilterDerivExplicit( t,y,s,u,params ), t, init_x, init_store );
