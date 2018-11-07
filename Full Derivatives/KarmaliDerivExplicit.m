@@ -121,9 +121,9 @@ function [dx, new_store] = KarmaliDerivExplicit( t, x, store, u, params )
         part_D(i*2,:) = new_input(i*2,:) + (1-0.1/params.tn2)*prev_D(i*2,:) - 0.1/params.tc*part_in(i*2,:);
     end
 
-    [omega_est, sigma_est, ww] = CanalParticleWeighting( corrected_particles', [0,0,0], params.sigprior );
-    %omega_est = mean( corrected_particles )';
-    %sigma_est = std( corrected_particles )';
+    %[omega_est, sigma_est, ww] = CanalParticleWeighting( corrected_particles', [0,0,0], params.sigprior );
+    omega_est = mean( corrected_particles )';
+    sigma_est = std( corrected_particles )';
     
     %% Derivative
     new_store = [omega_est; sigma_est; diag(Kgain); reshape( corrected_particles, nChannels*2*3, 1 ); reshape( part_in, nChannels*2*3, 1 ); reshape( part_D, nChannels*2*3,1 )];
