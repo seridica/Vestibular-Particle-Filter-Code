@@ -25,7 +25,7 @@ params.tc = 4;
 
 % For dual line
 params.tn1 = 40; %25; %75.9; %75;
-params.tn2 = 100;
+params.tn2 = 500;
 
 dt = 0.1;
 Fs = 1/dt;
@@ -36,7 +36,7 @@ sigQ = eye(3)*6.4^2; %0.01; %[14.0];
 
 params.sigAlpha = sigC;
 params.sigAfferent = sigQ;
-params.sigPrior = eye(3)*10^2;
+params.sigPrior = eye(3)*1.5^2;
 
 %% Inputs
 %   - Angular position of canals (constant 3x1 or time varying 4xn)
@@ -137,6 +137,13 @@ params.Tcan = [1 0 0;...
 %                0 cos(pi/4) -sin(pi/4); ...
 %                0 sin(pi/4) cos(pi/4)];
 
+% params.Tcan = [1 0 0; ...
+%                0 cos(pi/4) -sin(pi/4); ...
+%                0 sin(pi/4) cos(pi/4)] * ...
+%               [cos(pi/4) -sin(pi/4) 0; ...
+%                sin(pi/4) cos(pi/4) 0; ...
+%                0 0 1];
+
 %% Initializing the variables
 % Initializing initial conditions
 C = zeros(3,1);              % Canal output signal   
@@ -148,8 +155,9 @@ GE = u.grav;             % Gravity estimate
 
 %init_x = [C; D; INT; VS; VSf; GE];
 %% Simulating with Spine Lab Kalman Filter
+figure(1); clf; hold on;
 x_1_1 = zeros(15,1);
-sig_1_1 = params.sigAfferent + params.sigPrior;
+sig_1_1 = params.sigAfferent;
 
 states = zeros( 15, length(t) );
 sigs = zeros( 3, length(t) );
@@ -160,9 +168,12 @@ sigs(:,1) = diag( sig_1_1 );
 x_prev = x_1_1;
 sig_prev = sig_1_1;
 
+plot( t(1), x_1_1(2), 'ko' );
+plot( [t(1), t(1)], [x_1_1(2) - sig_1_1(2), x_1_1(2) + sig_1_1(2)], 'k' );
+
 for i=2:length( t )
     alpha = angAcc(:,i);
-    [x_new, sig_new] = SpineLabKalmanStep( x_prev, sig_prev, alpha, params, dt );
+    [x_new, sig_new] = SpineLabKalmanStep( x_prev, sig_prev, alpha, params, dt, t(i) );
     
     states(:,i) = x_new;
     sigs(:,i) = diag( sig_new );
