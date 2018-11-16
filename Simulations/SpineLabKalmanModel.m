@@ -25,7 +25,7 @@ params.tc = 4;
 
 % For dual line
 params.tn1 = 40; %25; %75.9; %75;
-params.tn2 = 500;
+params.tn2 = 1000;
 
 dt = 0.1;
 Fs = 1/dt;
@@ -36,7 +36,7 @@ sigQ = eye(3)*6.4^2; %0.01; %[14.0];
 
 params.sigAlpha = sigC;
 params.sigAfferent = sigQ;
-params.sigPrior = eye(3)*1.5^2;
+params.sigPrior = eye(3)*30^2;
 
 %% Inputs
 %   - Angular position of canals (constant 3x1 or time varying 4xn)
@@ -132,18 +132,20 @@ u.grav = [0; -9.81; 0];
 params.Tcan = [1 0 0;...
           0 1 0;...
           0 0 1];
-      
+%       
 % params.Tcan = [1 0 0; ...
 %                0 cos(pi/4) -sin(pi/4); ...
 %                0 sin(pi/4) cos(pi/4)];
-
+% 
 % params.Tcan = [1 0 0; ...
 %                0 cos(pi/4) -sin(pi/4); ...
 %                0 sin(pi/4) cos(pi/4)] * ...
 %               [cos(pi/4) -sin(pi/4) 0; ...
 %                sin(pi/4) cos(pi/4) 0; ...
 %                0 0 1];
-
+% params.Tcan = [cos(pi/2) -sin(pi/2) 0; ...
+%                sin(pi/2) cos(pi/2) 0; ...
+%                0 0 1];
 %% Initializing the variables
 % Initializing initial conditions
 C = zeros(3,1);              % Canal output signal   
@@ -155,15 +157,15 @@ GE = u.grav;             % Gravity estimate
 
 %init_x = [C; D; INT; VS; VSf; GE];
 %% Simulating with Spine Lab Kalman Filter
-figure(1); clf; hold on;
-x_1_1 = zeros(15,1);
+figure(21); clf; hold on;
+x_1_1 = zeros(15,1);%[randn(12,1);zeros(3,1)];
 sig_1_1 = params.sigAfferent;
 
 states = zeros( 15, length(t) );
 sigs = zeros( 3, length(t) );
 
 states(:,1) = x_1_1;
-sigs(:,1) = diag( sig_1_1 );
+sigs(:,1) = ones(3,1)*100;
 
 x_prev = x_1_1;
 sig_prev = sig_1_1;

@@ -25,7 +25,7 @@ nParticles = 200;
 params.tc = 4;
 
 % For dual line
-params.tn_list = [ ones(nParticles/2,1)*40; ones(nParticles/2,1)*100 ];
+params.tn_list = [ ones(nParticles/2,1)*40; ones(nParticles/2,1)*1000 ];
 
 dt = 0.1;
 Fs = 1/dt;
@@ -33,10 +33,10 @@ Fs = 1/dt;
 % Nois Histories
 sigC = eye(3)*1.7^2; %[3.6];%[0.1]*pi/180 / dt;             % Canal noise (Laurens and Angelaki)
 sigQ1 = eye(3)*6.4^2;%6.4^2;%6.4^2;%6.4^2; %[14.0];
-sigQ2 = eye(3)*14^2;%14^2;%14^2;%6.4^2; %[14.0];
+sigQ2 = eye(3)*6.4^2;%14^2;%14^2;%6.4^2; %[14.0];
 
 params.sigAlpha = sigC;
-params.sigPrior = eye(3)*5^2;
+params.sigPrior = eye(3)*1.5^2;
 params.sigAfferent_list = zeros(3,3,nParticles);
 
 for i=1:75
@@ -155,6 +155,13 @@ params.Tcan = [1 0 0;...
 %                sin(pi/2) cos(pi/2) 0; ...
 %                0 0 1];
 
+% params.Tcan = [1 0 0; ...
+%                0 cos(pi/4) -sin(pi/4); ...
+%                0 sin(pi/4) cos(pi/4)] * ...
+%               [cos(pi/4) -sin(pi/4) 0; ...
+%                sin(pi/4) cos(pi/4) 0; ...
+%                0 0 1];
+
 %% Initializing the variables
 % Initializing initial conditions
 C = zeros(3,1);              % Canal output signal   
@@ -167,7 +174,7 @@ GE = u.grav;             % Gravity estimate
 %init_x = [C; D; INT; VS; VSf; GE];
 %% Simulating with Spine Lab Kalman Filter
 x_1_1 = zeros(3,1);
-sig_1_1 = eye(3)*0.5;
+sig_1_1 = eye(3)*sigQ1;
 
 particle_states = randn( 6*nParticles, 1 ).*sigC(1,1);
 

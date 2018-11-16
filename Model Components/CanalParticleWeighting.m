@@ -33,7 +33,7 @@ function [fused_estimate, fused_sigma, afferent_weights] = CanalParticleWeightin
                 if j == 1
                     afferent_weights(:,i) = ones( nAfferents, 1 ) / nAfferents;
                 else
-                    sum( afferent_weights(:,i) )
+                    sum( afferent_weights(:,i) );
                     afferent_weights(:,i) = zeros( nAfferents, 1 );
                     [m, pind] = min( ( particle_afferents(i,j) - all_means(j,i) ).^2 );
                     afferent_weights(pind,i) = 1;
@@ -45,8 +45,8 @@ function [fused_estimate, fused_sigma, afferent_weights] = CanalParticleWeightin
         end
 
         % Weighted mean
-        fused_estimate(i) = ( particle_afferents(i,:) * afferent_weights(:,j) ); % / nAfferents;
+        fused_estimate(i) = ( particle_afferents(i,:) * afferent_weights(:,i) ); % / nAfferents;
         %fused_sigma(i) = 0.2; %max( [( (particle_afferents(i,:) - fused_estimate(i) ).^2 * afferent_weights ), 0.2] );
-        fused_sigma(i) = (particle_afferents(i,:) - fused_estimate(i) ).^2 * afferent_weights(:,j);
+        fused_sigma(i) = (particle_afferents(i,:) - fused_estimate(i) ).^2 * afferent_weights(:,i);
     end
 end

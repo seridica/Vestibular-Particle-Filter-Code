@@ -50,16 +50,22 @@ function [x_t_t, sig_t_t, new_particle_states] = SpineLabParticleStep( x_t1_t1, 
     %afferent_states = new_particle_states;
     % Particle weighting
     kk = reshape( afferent_states((nStates/2+1):end), 3, nLines );
-    compare_means = [ 0,0,0; x_t1_t1' ];% [x_t1_t1'];%[ 0,0,0; x_t1_t1' ];
-    compare_sigs = [diag(sigPrior)'; diag( sig_t1_t1 )']; %, [0.28, 0.28, 0.28] )]; %[diag(sigPrior)'; diag( sig_t1_t1 )' + [0.01, 0.01, 0.01]]; %[diag(sigPrior)'; diag( sig_t1_t1 )' + [0.01, 0.01, 0.01]]; %;
-    [x_t_t, sig_t_t_vec, wts] = CanalParticleWeighting( kk, compare_means, compare_sigs );
-    sig_t_t = diag( sig_t_t_vec );
+    %compare_means = [ 0,0,0; x_t1_t1' ];% [x_t1_t1'];%[ 0,0,0; x_t1_t1' ];
+    %compare_sigs = [diag(sigPrior)'; diag( sig_t1_t1 )']; %, [0.28, 0.28, 0.28] )]; %[diag(sigPrior)'; diag( sig_t1_t1 )' + [0.01, 0.01, 0.01]]; %[diag(sigPrior)'; diag( sig_t1_t1 )' + [0.01, 0.01, 0.01]]; %;
     
+    compare_means = [0,0,0];
+    compare_sigs = diag(sigPrior)';
+    [aff_mean, aff_sig_vec, wts] = CanalParticleWeighting( kk, compare_means, compare_sigs );
+    
+    x_t_t = ( 0.01 * diag( kk * wts ) + 0.99 * x_t1_t1 );
+    sig_t_t = ( 0.01 * diag( diag( kk.*kk * wts ) ) + 0.99 * ( sig_t1_t1 + x_t1_t1*x_t1_t1' ) - x_t_t*x_t_t' );
     ll = Tcan'*kk;
+    mm = Tcan'*aff_mean;
     x_rot = Tcan'*x_t_t;
-    sig_rot = Tcan'*sig_t_t_vec;
+    sig_rot = Tcan'*sig_t_t*Tcan;
     plot( ones(nLines,1)*tnow, ll(2,:), 'x', 'Color', [0.7, 0.7, 0.7],'HandleVisibility','off' )
-    plot( tnow, mean( ll(2,:) ), 'ro','HandleVisibility','off' );
     plot( tnow, x_rot(2), 'gs', 'MarkerSize', 10.0,'HandleVisibility','off' );
-    plot( [tnow, tnow], [x_rot(2) - sig_rot(2), x_rot(2) + sig_rot(2)], 'k-', 'LineWidth', 2,'HandleVisibility','off'  )
+    plot( [tnow, tnow], [x_rot(2) - sqrt( sig_rot(2,2) ), x_rot(2) + sqrt( sig_rot(2,2) )], 'k-', 'LineWidth', 2,'HandleVisibility','off'  )
+    plot( tnow, mean( ll(2,:) ), 'ro','HandleVisibility','off' );
+    plot( tnow, mm(2,:), 'bo','HandleVisibility','off' );
 end
