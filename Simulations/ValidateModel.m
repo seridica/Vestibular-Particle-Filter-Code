@@ -24,7 +24,7 @@
 %       : gd = Gain on canal afferent
 
 params.tc = 4;
-params.tn = 75;
+params.tn = 100000;
 params.kv = 0.247;
 params.tvs = 14;
 
@@ -53,9 +53,8 @@ Fs = 1/dt;
 %   - Visual Noise (constant 3x1 or time varying 4xn)
 %   - Canal orientation (constant 3x3 or time varying 4x3xn)
 
-
 % Motion Profile
-mopo = 1;
+mopo = 3;
 if mopo == 1
     
     %%% Angular inputs from EBR paper - varies depending on plot being made
@@ -109,6 +108,7 @@ elseif mopo == 2
     
     %%% Angular inputs
     % Pitch profile
+    angPMag = [0; 90*pi/180; 0];
     stpT = 1.4;
     hldT = 30-stpT;
     stp = -1+2/(stpT/dt):2/(stpT/dt):1-2/(stpT/dt);
@@ -130,6 +130,12 @@ elseif mopo == 2
     % Time vector
     t = (0:length(angAcc)-1)*dt-10+dt;
     N = length(t);
+    
+    % Inputs!
+    u.alpha = [t;angAcc];
+    u.omega = [t;angVel];
+    u.acc = [t;tranAcc];
+    
 elseif mopo == 3
     %%% Angular inputs from EBR paper - varies depending on plot being made
     angVMag = [0; 120*pi/180; 0];     % Velocity magnitude in rads (roll, pitch yaw)
@@ -194,16 +200,16 @@ VS = zeros(3,1);             % Velocity storage leaky integrator
 VSf = zeros(3,1);            % Velocity storage full
 GE = u.grav;             % Gravity estimate
 
-init_x = [C; D; INT; VS];
-init_store = [];
-%init_x = [C; D; INT; VS; VSf; GE];
+%init_x = [C; D; INT; VS];
+%init_store = [];
+init_x = [C; D; INT; VS; VSf; GE];
 %init_x = [C; D; D; INT; VS; VSf; GE];
 
 %% Simulating the model
 options = odeset('MaxStep', 0.1);
-[tinteg, full_states, store_states] = ExplicitIntegrator( @(t,y,s) SimpleLaurensVestibularModelDerivExplicit(t,y,s,u,params), t, init_x, init_store);
+%[tinteg, full_states, store_states] = ExplicitIntegrator( @(t,y,s) SimpleLaurensVestibularModelDerivExplicit(t,y,s,u,params), t, init_x, init_store);
 %[tinteg, full_states] = ode45(@(t,y) SimpleLaurensVestibularModelDeriv(t,y,u,params), t, init_x, options);
-%[tinteg, full_states] = ode45(@(t,y) LaurensVestibularModelDeriv(t,y,u,params), [min(t), max(t)], init_x, options);
+[tinteg, full_states] = ode45(@(t,y) LaurensVestibularModelDeriv(t,y,u,params), [min(t), max(t)], init_x, options);
 %[tinteg, full_states] = ode45(@(t,y) CanalDynamicsDeriv(t,y,u,params), [min(t), max(t)], C);%init_x);
 %[tinteg, full_states] = ode45(@(t,y) LaurensVestibularModelDeriv(t,y,u,params), [min(t), max(t)], [C;D;INT;VS;VSf]);%init_x);
 
