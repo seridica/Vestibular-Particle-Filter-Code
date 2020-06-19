@@ -19,7 +19,7 @@ function [t, output_estimate, output_zero, output_std] = ResampleAggregateSimula
     params.sigAlpha = 1.0; % Input variance
     params.sigAfferent = 1.0; % Canal afferent variance
     params.sigPrior = 25.0; % Zero prior for perception
-    params.sigState = 0.03; % Process variance
+    params.sigState = 0.01; % Process variance
     
     % Motion profile generation
     mopo = 2;

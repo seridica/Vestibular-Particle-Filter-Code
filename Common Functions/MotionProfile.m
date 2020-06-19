@@ -19,7 +19,8 @@ function [t, angAcc] = MotionProfile( mopo, dt, dur )
         case 2
             %angVMag = [0; 90; 0];
             angVMag = [0; 45; 0];
-            Tmo = 160;
+            Tmo = dur + 70;
+            %Tmo = 160;
             t =-20:dt:Tmo;
             %stop_t = 46.5;
             %stop_t = 60.5;

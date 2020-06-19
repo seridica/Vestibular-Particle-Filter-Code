@@ -39,7 +39,7 @@ function new_distribution = SpineLabResampleStep( state_distributions, alpha, pa
 %         keyboard;
 %     end
     resample_distributions = {internal_distribution, prior_afferent_distribution};
-    new_internal_distribution = ResampleDistribution( resample_distributions, length(internal_distribution), 4, [500, 1] ) + sqrt(sigState) * randn( length( internal_distribution), 1 );
+    new_internal_distribution = ResampleDistribution( resample_distributions, length(internal_distribution), 4, [400, 1] ) + sqrt(sigState) * randn( length( internal_distribution), 1 );
     %new_internal_distribution = ResampleDistribution( resample_distributions, length(internal_distribution), 4, [20, 1] );
     %new_internal_distribution = ZeroPriorResample( new_internal_distribution, sigPrior );
     zero_internal_distribution = ZeroPriorResample( new_internal_distribution, sqrt(sigPrior) );

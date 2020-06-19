@@ -79,7 +79,7 @@ for i=2:length( t )
     
         %plot( t(i), mean( new_state_dist{1} ) + [-std( new_state_dist{1} ), std( new_state_dist{1} )], 'Color', [0.5,0.5,0.5], 'Marker', 'o' );
         plot( t(i), mean( new_state_dist{1} ), 'Color', [0.1294, 0.6667, 0.1294], 'Marker', 'o', 'MarkerSize', 5, 'LineWidth', 2 );
-        if ( mod(i,10) == 0 )
+        if ( mod(i,5) == 0 )
            cur_dist = new_state_dist{1};
            plot( t(i), cur_dist(1:5:250), 'Marker', 'x', 'LineStyle', 'none', 'MarkerSize', 5, 'LineWidth', 0.5, 'Color', [0.8, 0.8, 0.8, 0.2] );
         end

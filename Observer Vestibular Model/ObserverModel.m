@@ -21,7 +21,7 @@ Fs = 1/dt;
 
 % Motion Profile
 mopo = 2;
-[t, angAcc] = MotionProfile( mopo, dt );
+[t, angAcc] = MotionProfile( mopo, dt, 60.5 );
 
 % Angular position (for now)
 params.Tcan = [1 0 0;...

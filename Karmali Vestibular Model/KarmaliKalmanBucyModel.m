@@ -10,13 +10,13 @@
 %       : tc = Canal time constant
 
 % From Karmali
-%dt = 1/8000;
-dt = 0.001; %1/8000;
+dt = 1/8000;
+%dt = 0.001; %1/8000;
 Fs = 1/dt;
 
 % Parameters from Karmali Paper
 params.tc = 5.7;
-params.R = 2.8;
+params.R = 10.0;
 params.Q = 41;
 params.t2 = 0.005;
 
@@ -25,7 +25,7 @@ params.t2 = 0.005;
 
 % Motion Profile
 mopo = 2;
-[t, angAcc] = MotionProfile( mopo, dt );
+[t, angAcc] = MotionProfile( mopo, dt, 60.5 );
 angAcc = cumtrapz( angAcc(2,:) ) * dt;
 
 %% Simulating with Observer Model - Deriv

@@ -30,7 +30,7 @@ function x_next = LaurensParticleDeriv( x_pre, V, params, dt )
     
     % Compute the current head velocity estimate based on inverse canal
     % dynamics model
-    omega_curr = omega_pre + ( 1 - dt./tc ) .* canal_pre - canal_curr;
+    omega_curr = omega_pre - ( 1 - dt./tc ) .* canal_pre + canal_curr;
     
     x_next = LaurensReweight( [ canal_curr, omega_curr ], omv );
 end

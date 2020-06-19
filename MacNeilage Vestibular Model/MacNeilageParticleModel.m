@@ -1,5 +1,5 @@
 %%%
-% File: MacNeilageKalmanBucyModel.m
+% File: MacNeilageParticleModel.m
 % Author: Calvin Kuo
 % Date: 11-15-2018
 % Notes: Runs the MacNeilage Particle model equivalent
@@ -9,16 +9,17 @@
 %   - Canal Dynamics
 %       : tc = Canal time constant
 
-dt = 0.0005;
+%dt = 0.0005;
+dt = 1/8000;
 Fs = 1/dt;
 
 N = 100;
 
 % Parameters from Borah Paper
 params.Q = ones(1,N) * 200000000;
-params.R = ones(1,N) * 400;
+params.R = ones(1,N) * 25;
 params.tc = ones(1,N) * 1/4;
-params.beta = ones(1,N) * 15;
+params.beta = ones(1,N) * 30;
 params.N = N;
 
 %% Inputs
@@ -26,7 +27,7 @@ params.N = N;
 
 % Motion Profile
 mopo = 2;
-[t, angAcc] = MotionProfile( mopo, dt );
+[t, angAcc] = MotionProfile( mopo, dt, 60.5 );
 %angAcc = cumtrapz( angAcc(2,:)' ) * dt;
 angAcc = angAcc(2,:)';
 

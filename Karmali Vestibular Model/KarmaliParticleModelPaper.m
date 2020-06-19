@@ -20,10 +20,11 @@ Fs = 1/dt;
 %N = 158;
 N = 33;
 %tc = normrnd( 5.7, 1.0, N, 1 ); %ones(N,1) * 5.7;
-tc = ones(N,1) * 5.7;
+%tc = ones(N,1) * 5.7;
+tc = ones(N,1) * 4.0;
 tc2 = ones(N,1) * 0.005;
 %R = [ones(N,1) * 13];% ones(158,1) * 2.8];
-R = [ones(N,1) * 2.8];
+R = [ones(N,1) * 2.8];%[ones(N,1) * 2.8];
 %Q = [ones(N,1) * 190.0]; %[ones(33,1) * 41];% ones(158,1) * 190];
 Q = [ones(N,1)*41];
 
@@ -32,7 +33,7 @@ Q = [ones(N,1)*41];
 
 % Motion Profile
 mopo = 5;
-[t, angAcc] = MotionProfile( mopo, dt );
+[t, angAcc] = MotionProfile( mopo, dt, 60.5 );
 angVel = cumtrapz( angAcc(2,:) )*dt;
 tlen = length(t);
 
@@ -92,7 +93,7 @@ internal_est = zeros( N, tlen );
 internal_outs = zeros( N, tlen );
 Ks = zeros( 4, tlen );
 for i=2:tlen
-    Pt = cov( internal_curr ) / dt / (Fs * 1.1 / 1000 + 1);
+    Pt = cov( internal_curr ) / dt / 10; % / (Fs * 1.1 / 1000 + 1);
     %Pt = [0, 0; 0, var( internal_curr(:,2) ) / dt];
     %Pt = std( internal_states_2 )^2 / dt; % Note, only using the second state
     %Rt = std( canal_outs(:,i) )^2;
@@ -100,6 +101,8 @@ for i=2:tlen
     
     if (mod(i,1/dt) == 0)
         i*dt
+        Pt
+        K
     end
 
     A = [0, 1; -1/(tc(1)*tc2(1)), -(1/tc(1) + 1/tc2(1))];

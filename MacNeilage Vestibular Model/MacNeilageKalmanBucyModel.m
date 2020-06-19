@@ -18,14 +18,14 @@ n_states = 13;
 params.Q = 200000000; %1000000000;
 params.R = 25;
 params.tc = 1/4;
-params.beta = 15;
+params.beta = 30;
 
 %% Inputs
 % Motion profile (angular acceleration)
 
 % Motion Profile
 mopo = 2;
-[t, angAcc] = MotionProfile( mopo, dt );
+[t, angAcc] = MotionProfile( mopo, dt, 60.5 );
 %angAcc = cumtrapz( angAcc(2,:)' ) * dt;
 angAcc = angAcc(2,:)';
 
